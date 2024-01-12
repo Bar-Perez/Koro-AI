@@ -1,0 +1,2 @@
+# Koro-AI
+home assignment
