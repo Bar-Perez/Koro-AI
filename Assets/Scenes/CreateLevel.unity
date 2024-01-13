@@ -355,14 +355,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 10, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!1 &1175108527
 GameObject:
   m_ObjectHideFlags: 0
@@ -396,11 +396,11 @@ MonoBehaviour:
   _platformPrefab: {fileID: 116344, guid: 1d769961df0aa544799a143aed191c45, type: 3}
   _blocksParent: {fileID: 59736513}
   _platformsParent: {fileID: 40488495}
-  _roomLength: 20
-  _roomWidth: 20
-  _roomHeight: 10
-  _maxPlatforms: 30
-  _verticalLevels: 8
+  _roomLength: 16
+  _roomWidth: 14
+  _roomHeight: 8
+  _maxPlatforms: 26
+  _verticalLevels: 7
   _maxHorizontalJump: 6
   _minRadius: 3
   _maxAttempts: 100

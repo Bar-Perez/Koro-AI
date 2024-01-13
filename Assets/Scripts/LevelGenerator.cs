@@ -1,12 +1,16 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class LevelGenerator : MonoBehaviour
 {
     [Header("Refrences")]
     [SerializeField] GameObject _tilePrefab;
     [SerializeField] GameObject _platformPrefab;
+    [SerializeField] GameObject _trapTilePrefab;
+    [SerializeField] GameObject _trapPlatformsPrefab;
     [SerializeField] Transform _blocksParent;
     [SerializeField] Transform _platformsParent;
+    [SerializeField] Transform _trapsParent;
 
     [Header("Room inner size")]
     [SerializeField] int _roomLength = 5;
@@ -22,16 +26,25 @@ public class LevelGenerator : MonoBehaviour
     [Header("Maximum attempts to find a valid platform position")]
     [SerializeField] int _maxAttempts = 100;
 
-    
+    [Header("Interactable")]
+    [SerializeField] int _floorTraps = 10;
+    [SerializeField] int _platformTraps = 5;
+
+    [Header("Collectable")]
+    [SerializeField] int _coinAmount = 15;
+
     private Vector3 _minInnerRoomBounds;
     private Vector3 _maxInnerRoomBounds;
     private Vector3 lastSpawnPosition;
     private int _platformCounter = 0;
+    private List<GameObject> _floorTilesList = new();
+    private List<GameObject> _platformsList = new();
 
     void Start()
     {
         GenerateRoom();
         GeneratePlatforms();
+        GenerateTraps();
     }
 
     void GenerateRoom()
@@ -63,13 +76,20 @@ public class LevelGenerator : MonoBehaviour
                     if (x == 0 || y == 0 || z == 0 || x == outerLength - 1 || z == outerWidth - 1)
                     {
                         Vector3 tilePosition = new Vector3(x * tileSize.x, y * tileSize.y, z * tileSize.z);
-                        Instantiate(_tilePrefab, tilePosition, Quaternion.identity, _blocksParent);
+                        if(y ==0 && x >= _minInnerRoomBounds.x && x <= _maxInnerRoomBounds.x && z >= _minInnerRoomBounds.z && z <= _maxInnerRoomBounds.z)
+                        {
+                            var go = Instantiate(_tilePrefab, tilePosition, Quaternion.identity, _blocksParent);
+                            _floorTilesList.Add(go);
+                        }
+                        else
+                            Instantiate(_tilePrefab, tilePosition, Quaternion.identity, _blocksParent);
+
                     }
                 }
             }
         }
     }
-    void GenerateLeftOvers(float xExtent, float zExtent, Vector3 platformSize, float platformLevelHeight)
+    void GenerateLeftOversPlatforms(float xExtent, float zExtent, Vector3 platformSize, float platformLevelHeight)
     { 
         var iteration = _maxPlatforms - _platformCounter;
 
@@ -116,7 +136,7 @@ public class LevelGenerator : MonoBehaviour
         if (_platformCounter <= 0)
             throw new System.Exception("Room is too small,no platforms Generated");
 
-        GenerateLeftOvers(xExtent, zExtent, platformSize, platformLevelHeight);
+        GenerateLeftOversPlatforms(xExtent, zExtent, platformSize, platformLevelHeight);
     }
     void GeneratePlatform(Vector3 spawnPosition, float xExtent, float zExtent)
     {
@@ -137,7 +157,8 @@ public class LevelGenerator : MonoBehaviour
             if (!CheckOverlap(center) && CheckDistance(center))
             {
                 // Generate the new platform at the calculated position
-                Instantiate(_platformPrefab, center, Quaternion.identity, _platformsParent);
+                var go =Instantiate(_platformPrefab, center, Quaternion.identity, _platformsParent);
+                _platformsList.Add(go);
                 lastSpawnPosition = center;
                 _platformCounter++;
                 return; // Exit the loop if a valid platform position is found
@@ -159,7 +180,7 @@ public class LevelGenerator : MonoBehaviour
         lastSpawnPosition = new Vector3(xPosition, yPosition, zPosition);
     }
 
-    //Tests
+    //Utiliy Method
     bool CheckOverlap(Vector3 position)
     {
         var shpereCheckRange = _minInnerRoomBounds.y;
@@ -167,6 +188,7 @@ public class LevelGenerator : MonoBehaviour
         return colliders.Length > 0;
     }
 
+    //Utiliy Method
     bool CheckDistance(Vector3 position)
     {
         var distance = Vector3.Distance(lastSpawnPosition, position);
@@ -175,5 +197,36 @@ public class LevelGenerator : MonoBehaviour
             return false;
         return true;
     }
+
+    void GenerateTraps()
+    {
+        GenerateTrapType(_floorTraps, _floorTilesList, _trapTilePrefab);
+        GenerateTrapType(_platformTraps, _platformsList, _trapPlatformsPrefab);
+    }
+    void GenerateTrapType(float trapsAmount,List<GameObject> trapList, GameObject trapType)
+    {
+        HashSet<int> usedIndices = new HashSet<int>();
+
+        for (int i = 0; i < trapsAmount; i++)
+        {
+            int rnd;
+
+            // Ensure the generated index is unique
+            do
+            {
+                rnd = Random.Range(0, trapList.Count);
+            } while (usedIndices.Contains(rnd));
+
+
+            usedIndices.Add(rnd);
+
+            var position = trapList[rnd].transform.position;
+            Destroy(trapList[rnd]);
+            trapList[rnd] = Instantiate(trapType, position, Quaternion.identity, _trapsParent);
+        }
+
+        usedIndices.Clear();
+    }
+
 
 }
