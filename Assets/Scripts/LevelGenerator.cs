@@ -8,9 +8,15 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] GameObject _platformPrefab;
     [SerializeField] GameObject _trapTilePrefab;
     [SerializeField] GameObject _trapPlatformsPrefab;
+    [SerializeField] GameObject _doorPlatformsPrefab;
+    [SerializeField] GameObject _keyPrefab;
+    [SerializeField] GameObject _coinPlatformPrefab;
+    [SerializeField] GameObject _coinFloorPrefab;
     [SerializeField] Transform _blocksParent;
     [SerializeField] Transform _platformsParent;
     [SerializeField] Transform _trapsParent;
+    [SerializeField] Transform _doorParent;
+    [SerializeField] Transform _keyParent;
 
     [Header("Room inner size")]
     [SerializeField] int _roomLength = 5;
@@ -29,6 +35,8 @@ public class LevelGenerator : MonoBehaviour
     [Header("Interactable")]
     [SerializeField] int _floorTraps = 10;
     [SerializeField] int _platformTraps = 5;
+    [SerializeField] int _platformCoins = 10;
+    [SerializeField] int _floorCoins = 5;
 
     [Header("Collectable")]
     [SerializeField] int _coinAmount = 15;
@@ -39,12 +47,17 @@ public class LevelGenerator : MonoBehaviour
     private int _platformCounter = 0;
     private List<GameObject> _floorTilesList = new();
     private List<GameObject> _platformsList = new();
+    private HashSet<int> _usedSpotsFloor = new HashSet<int>();
+    private HashSet<int> _usedSpotsPlatform = new HashSet<int>();
 
     void Start()
     {
         GenerateRoom();
         GeneratePlatforms();
+        GenerateEndDoor(_doorPlatformsPrefab);
+        GenerateKey(_keyPrefab);
         GenerateTraps();
+        GenerateCoins();
     }
 
     void GenerateRoom()
@@ -197,36 +210,64 @@ public class LevelGenerator : MonoBehaviour
             return false;
         return true;
     }
-
     void GenerateTraps()
     {
-        GenerateTrapType(_floorTraps, _floorTilesList, _trapTilePrefab);
-        GenerateTrapType(_platformTraps, _platformsList, _trapPlatformsPrefab);
+        GenerateObjects(_floorTraps, _floorTilesList, _trapTilePrefab, _usedSpotsFloor);
+        GenerateObjects(_platformTraps, _platformsList, _trapPlatformsPrefab, _usedSpotsPlatform);
     }
-    void GenerateTrapType(float trapsAmount,List<GameObject> trapList, GameObject trapType)
+    void GenerateObjects(float amount,List<GameObject> list, GameObject type,HashSet<int> hashSet)
     {
-        HashSet<int> usedIndices = new HashSet<int>();
-
-        for (int i = 0; i < trapsAmount; i++)
+        for (int i = 0; i < amount; i++)
         {
             int rnd;
 
             // Ensure the generated index is unique
             do
             {
-                rnd = Random.Range(0, trapList.Count);
-            } while (usedIndices.Contains(rnd));
+                rnd = Random.Range(0, list.Count);
+            } while (hashSet.Contains(rnd));
 
 
-            usedIndices.Add(rnd);
+            hashSet.Add(rnd);
 
-            var position = trapList[rnd].transform.position;
-            Destroy(trapList[rnd]);
-            trapList[rnd] = Instantiate(trapType, position, Quaternion.identity, _trapsParent);
+            var position = list[rnd].transform.position;
+            Destroy(list[rnd]);
+            list[rnd] = Instantiate(type, position, Quaternion.identity, _trapsParent);
         }
 
-        usedIndices.Clear();
     }
+    void GenerateEndDoor(GameObject doorType)
+    {
+        //start from the middle to save time
+        int startIndex = _platformsList.Count / 2;
+        // spawn at top 1/3 of max height
+        float spawnPositionY = _maxInnerRoomBounds.y - (_maxInnerRoomBounds.y / 3f);
+        while (startIndex < _platformsList.Count)
+        {
+            var position = _platformsList[startIndex].transform.position;
 
+            if (position.y >= spawnPositionY)
+            {
+                Destroy(_platformsList[startIndex]);
+                _platformsList[startIndex] = Instantiate(doorType, position, Quaternion.identity, _doorParent);
+                _usedSpotsPlatform.Add(startIndex);
+                return;
+            }
+            startIndex++;
+        }
+    }
+    void GenerateCoins()
+    {
+        GenerateObjects(_floorCoins, _floorTilesList, _coinFloorPrefab, _usedSpotsFloor);
+        GenerateObjects(_platformCoins, _platformsList, _coinPlatformPrefab, _usedSpotsPlatform);
+    }
+    void GenerateKey(GameObject keyType)
+    {
+        var rnd = Random.Range(0, _platformsList.Count);
+        var position = _platformsList[rnd].transform.position;
+        Destroy(_platformsList[rnd]);
+        _platformsList[rnd] = Instantiate(keyType, position, Quaternion.identity, _keyParent);
+        _usedSpotsPlatform.Add(rnd);
+    }
 
 }
