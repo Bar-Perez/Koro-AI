@@ -392,16 +392,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 840a36a50b3fffb47a3934a18037d2cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TilePrefab: {fileID: 140622, guid: 8c205068c986d2c4fa0fff282d2f20ea, type: 3}
-  PlatformPrefab: {fileID: 116344, guid: 1d769961df0aa544799a143aed191c45, type: 3}
-  RoomLength: 20
-  RoomWidth: 20
-  RoomHeight: 10
-  totalPlatforms: 30
-  verticalLevels: 20
-  maxHorizontalJump: 6
-  minRadius: 3
-  maxAttempts: 300
+  _tilePrefab: {fileID: 140622, guid: 8c205068c986d2c4fa0fff282d2f20ea, type: 3}
+  _platformPrefab: {fileID: 116344, guid: 1d769961df0aa544799a143aed191c45, type: 3}
+  _blocksParent: {fileID: 59736513}
+  _platformsParent: {fileID: 40488495}
+  _roomLength: 20
+  _roomWidth: 20
+  _roomHeight: 10
+  _maxPlatforms: 30
+  _verticalLevels: 8
+  _maxHorizontalJump: 6
+  _minRadius: 3
+  _maxAttempts: 100
 --- !u!4 &1175108529
 Transform:
   m_ObjectHideFlags: 0

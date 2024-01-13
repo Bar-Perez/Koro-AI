@@ -22,10 +22,11 @@ public class LevelGenerator : MonoBehaviour
     [Header("Maximum attempts to find a valid platform position")]
     [SerializeField] int _maxAttempts = 100;
 
+    
     private Vector3 _minInnerRoomBounds;
     private Vector3 _maxInnerRoomBounds;
     private Vector3 lastSpawnPosition;
-    private int platformCounter = 0;
+    private int _platformCounter = 0;
 
     void Start()
     {
@@ -68,6 +69,19 @@ public class LevelGenerator : MonoBehaviour
             }
         }
     }
+    void GenerateLeftOvers(float xExtent, float zExtent, Vector3 platformSize, float platformLevelHeight)
+    { 
+        var iteration = _maxPlatforms - _platformCounter;
+
+        InitialRandomPosition(xExtent, zExtent);
+
+        for (int i = 1; i <= iteration; i++)
+        {
+            GeneratePlatform(lastSpawnPosition, xExtent, zExtent);
+            lastSpawnPosition.y = Mathf.Clamp(_minInnerRoomBounds.y + (platformLevelHeight * i), _minInnerRoomBounds.y, _maxInnerRoomBounds.y);
+        }
+
+    }
     void GeneratePlatforms()
     {
         if (_platformPrefab == null)
@@ -81,7 +95,6 @@ public class LevelGenerator : MonoBehaviour
 
         // Calculate the extent of each direction
         float xExtent = (platformSize.x / 2);
-        float yExtent = (platformSize.y / 2);
         float zExtent = (platformSize.z / 2);
 
         InitialRandomPosition(xExtent, zExtent);
@@ -100,11 +113,12 @@ public class LevelGenerator : MonoBehaviour
             lastSpawnPosition.y = Mathf.Clamp(_minInnerRoomBounds.y + (platformLevelHeight * i), _minInnerRoomBounds.y, _maxInnerRoomBounds.y);
         }
 
-        if (platformCounter <= 0)
+        if (_platformCounter <= 0)
             throw new System.Exception("Room is too small,no platforms Generated");
 
+        GenerateLeftOvers(xExtent, zExtent, platformSize, platformLevelHeight);
     }
-    void GeneratePlatform(Vector3 spawnPosition,float xExtent,float zExtent)
+    void GeneratePlatform(Vector3 spawnPosition, float xExtent, float zExtent)
     {
         int attempts = 0;
         float xPosition;
@@ -125,7 +139,7 @@ public class LevelGenerator : MonoBehaviour
                 // Generate the new platform at the calculated position
                 Instantiate(_platformPrefab, center, Quaternion.identity, _platformsParent);
                 lastSpawnPosition = center;
-                platformCounter++;
+                _platformCounter++;
                 return; // Exit the loop if a valid platform position is found
             }
 
@@ -139,7 +153,7 @@ public class LevelGenerator : MonoBehaviour
     private void InitialRandomPosition(float xExtent, float zExtent)
     {
         float xPosition = Random.Range(_minInnerRoomBounds.x + xExtent, _maxInnerRoomBounds.x - xExtent);
-        float yPosition = _minInnerRoomBounds.y;
+        float yPosition = _minInnerRoomBounds.y * 2;
         float zPosition = Random.Range(_minInnerRoomBounds.z + zExtent, _maxInnerRoomBounds.z - zExtent);
 
         lastSpawnPosition = new Vector3(xPosition, yPosition, zPosition);
@@ -149,18 +163,17 @@ public class LevelGenerator : MonoBehaviour
     bool CheckOverlap(Vector3 position)
     {
         var shpereCheckRange = _minInnerRoomBounds.y;
-        Collider[] colliders = Physics.OverlapSphere(position, shpereCheckRange); 
+        Collider[] colliders = Physics.OverlapSphere(position, shpereCheckRange);
         return colliders.Length > 0;
     }
 
     bool CheckDistance(Vector3 position)
     {
         var distance = Vector3.Distance(lastSpawnPosition, position);
-        
+
         if (distance > _maxHorizontalJump || distance < _minRadius)
             return false;
         return true;
     }
 
 }
-
